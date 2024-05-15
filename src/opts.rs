@@ -13,6 +13,8 @@ pub struct Opts {
 pub enum Subcommand {
     #[command(name = "csv", about = "Convert Csv to json")]
     Csv(CsvOpt),
+    #[command(name = "genpass", about = "Generate a random password")]
+    GenPass(GenPassOpts),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -20,6 +22,20 @@ pub enum OutputFormat {
     Json,
     Yaml,
     Toml,
+}
+
+#[derive(Debug, Parser)]
+pub struct GenPassOpts {
+    #[arg(short, long, default_value_t = 16)]
+    pub length: u8,
+    #[arg(long, default_value_t = true)]
+    pub uppercase: bool,
+    #[arg(long, default_value_t = true)]
+    pub lowercase: bool,
+    #[arg(long, default_value_t = true)]
+    pub number: bool,
+    #[arg(long, default_value_t = true)]
+    pub symbol: bool,
 }
 
 #[derive(Debug, Parser)]

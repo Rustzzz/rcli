@@ -1,46 +1,10 @@
+use std::{fmt, str::FromStr};
 use clap::Parser;
-use core::fmt;
-use std::{path::Path, str::FromStr};
-
-#[derive(Debug, Parser)]
-#[command(name = "rcli")]
-pub struct Opts {
-    #[command(subcommand)]
-    pub cmd: Subcommand,
-}
-
-#[derive(Debug, Parser)]
-pub enum Subcommand {
-    #[command(name = "csv", about = "Convert Csv to json")]
-    Csv(CsvOpt),
-    #[command(name = "genpass", about = "Generate a random password")]
-    GenPass(GenPassOpts),
-}
-
-#[derive(Debug, Clone, Copy)]
-pub enum OutputFormat {
-    Json,
-    Yaml,
-    Toml,
-}
-
-#[derive(Debug, Parser)]
-pub struct GenPassOpts {
-    #[arg(short, long, default_value_t = 16)]
-    pub length: u8,
-    #[arg(long, default_value_t = true)]
-    pub uppercase: bool,
-    #[arg(long, default_value_t = true)]
-    pub lowercase: bool,
-    #[arg(long, default_value_t = true)]
-    pub number: bool,
-    #[arg(long, default_value_t = true)]
-    pub symbol: bool,
-}
+use super::verify_input_file;
 
 #[derive(Debug, Parser)]
 pub struct CsvOpt {
-    #[arg(short, long,value_parser = verify_file_exists)]
+    #[arg(short, long,value_parser = verify_input_file)]
     pub input: String,
     #[arg(short, long, value_parser = parse_format, default_value = "json")]
     pub format: OutputFormat,
@@ -54,15 +18,14 @@ pub struct CsvOpt {
     pub header: bool,
 }
 
-fn verify_file_exists(file: &str) -> Result<String, &'static str> {
-    if Path::new(file).exists() {
-        Ok(file.into())
-    } else {
-        Err("File not exist!")
-    }
+#[derive(Debug, Clone, Copy)]
+pub enum OutputFormat {
+    Json,
+    Yaml,
+    Toml,
 }
 
-fn parse_format(format: &str) -> Result<OutputFormat, anyhow::Error> {
+pub fn parse_format(format: &str) -> Result<OutputFormat, anyhow::Error> {
     format.parse::<OutputFormat>()
 }
 

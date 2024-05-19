@@ -8,9 +8,9 @@ pub struct CsvOpt {
     pub input: String,
     #[arg(short, long, value_parser = parse_format, default_value = "json")]
     pub format: OutputFormat,
-    // default_value 会做一次自动转换 from &str to String
     #[arg(short, long)]
     pub output: Option<String>,
+     // default_value 会做一次自动转换 from &str to String
     // default_value_t 不会自动转换，需要和字段类型完全对应
     #[arg(short, long, default_value_t = ',')]
     pub delimiter: char,

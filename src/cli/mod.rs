@@ -1,12 +1,13 @@
 mod base64;
 mod csv;
 mod genpass;
+mod text;
 use std::path::Path;
 pub use base64::{Base64SubCommand,Base64Format};
 use clap::Parser;
 pub use csv::OutputFormat;
-
 use self::{csv::CsvOpt, genpass::GenPassOpts};
+pub use text::{TextSubCommand,TextSignFormat};
 
 #[derive(Debug, Parser)]
 #[command(name = "rcli")]
@@ -23,6 +24,8 @@ pub enum Subcommand {
     GenPass(GenPassOpts),
     #[command(subcommand, about = "Encode or decode base64")]
     Base64(Base64SubCommand),
+    #[command(subcommand, about = "Text sign/verify")]
+    Text(TextSubCommand),
 }
 
 pub fn verify_input_file(filename: &str) -> Result<String, &'static str> {

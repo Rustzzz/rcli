@@ -1,13 +1,13 @@
-use std::fs;
-
 use anyhow::Result;
 use clap::Parser;
 use rcli::{
-    process_csv, process_decode, process_encode, process_genpass, process_key_generate,
-    process_sign, process_verify, Opts, Subcommand,
+    process_csv, process_decode, process_encode, process_genpass, process_http_serve,
+    process_key_generate, process_sign, process_verify, Opts, Subcommand,
 };
-
-fn main() -> Result<()> {
+use std::fs;
+#[tokio::main]
+async fn main() -> Result<()> {
+    tracing_subscriber::fmt::init();
     let cli = Opts::parse();
     match cli.cmd {
         Subcommand::Csv(csv_opt) => {
@@ -52,10 +52,17 @@ fn main() -> Result<()> {
                     rcli::TextSignFormat::Ed25519 => {
                         fs::write(opt.output_path.join("ed25519_public_key.txt"), &key[0])?;
                         fs::write(opt.output_path.join("ed25519_secret_key.txt"), &key[1])?;
-                    },
+                    }
                 }
             }
         },
+        Subcommand::Http(cmd) => {
+            match cmd {
+                rcli::HttpSubCommand::Serve(opt) => {
+                    process_http_serve(opt.dir, opt.port).await?
+                },
+            }
+        }
     }
 
     Ok(())

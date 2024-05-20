@@ -57,7 +57,7 @@ fn parse_text_sign_format(format: &str) -> Result<TextSignFormat, anyhow::Error>
     format.parse()
 }
 
-fn verify_path(path: &str) -> Result<PathBuf, &'static str> {
+pub fn verify_path(path: &str) -> Result<PathBuf, &'static str> {
     let path = Path::new(path);
     if path.exists() && path.is_dir() {
         Ok(path.into())

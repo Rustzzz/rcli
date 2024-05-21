@@ -75,7 +75,15 @@ async fn gen_resp(path: PathBuf, status: PathType) -> Html<String> {
             let ul = format!("<ul>{}</ul>", li_list);
             ul
         }
-        PathType::IsFile => tokio::fs::read_to_string(path).await.unwrap(),
+        PathType::IsFile => match tokio::fs::read_to_string(path).await {
+            Ok(ret) => ret,
+            Err(e) => {
+                let mut err = String::new();
+                err.push_str("Serve Error: ");
+                err.push_str(&e.to_string());
+                err
+            }
+        },
     };
 
     let html = format!(

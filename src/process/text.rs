@@ -36,7 +36,7 @@ pub struct Ed25519Verifier {
     key: VerifyingKey,
 }
 
-pub fn process_sign(input: &str, key: &str, format: TextSignFormat) -> Result<()> {
+pub fn process_sign(input: &str, key: &str, format: TextSignFormat) -> Result<String> {
     let mut reader = get_reader(input)?;
     let signed = match format {
         TextSignFormat::Blake3 => {
@@ -49,11 +49,10 @@ pub fn process_sign(input: &str, key: &str, format: TextSignFormat) -> Result<()
         }
     };
     let signed = URL_SAFE_NO_PAD.encode(&signed);
-    println!("{}", signed);
-    Ok(())
+    Ok(signed)
 }
 
-pub fn process_verify(input: &str, key: &str, format: TextSignFormat, sig: &str) -> Result<()> {
+pub fn process_verify(input: &str, key: &str, format: TextSignFormat, sig: &str) -> Result<bool> {
     let mut reader = get_reader(input)?;
     let sig = URL_SAFE_NO_PAD.decode(sig)?;
     let verified = match format {
@@ -66,8 +65,7 @@ pub fn process_verify(input: &str, key: &str, format: TextSignFormat, sig: &str)
             verifier.verify(&mut reader, &sig)?
         }
     };
-    println!("{}", verified);
-    Ok(())
+    Ok(verified)
 }
 
 pub fn process_key_generate(format: TextSignFormat) -> Result<Vec<Vec<u8>>> {

@@ -1,5 +1,7 @@
 use std::{fmt, str::FromStr};
 use clap::Parser;
+use crate::{process_csv, CmdExcutor};
+
 use super::verify_input_file;
 
 #[derive(Debug, Parser)]
@@ -55,5 +57,17 @@ impl From<OutputFormat> for &'static str {
 impl fmt::Display for OutputFormat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Into::<&'static str>::into(*self))
+    }
+}
+
+
+impl CmdExcutor for CsvOpt {
+    async fn execute(self) -> anyhow::Result<()> {
+        let output = if let Some(output) = self.output {
+            output
+        } else {
+            format!("output.{}", self.format)
+        };
+        process_csv(&self.input, &output, self.format)
     }
 }

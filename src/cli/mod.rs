@@ -1,15 +1,17 @@
 mod base64;
 mod csv;
 mod genpass;
-mod text;
 mod http;
-use std::path::Path;
-pub use base64::{Base64SubCommand,Base64Format};
+mod text;
+use self::{csv::CsvOpt, genpass::GenPassOpts};
+use crate::CmdExcutor;
+pub use base64::{Base64Format, Base64SubCommand};
 use clap::Parser;
 pub use csv::OutputFormat;
-use self::{csv::CsvOpt, genpass::GenPassOpts};
-pub use text::{TextSubCommand,TextSignFormat};
 pub use http::HttpSubCommand;
+use std::path::Path;
+pub use text::{TextSignFormat, TextSubCommand};
+
 #[derive(Debug, Parser)]
 #[command(name = "rcli")]
 pub struct Opts {
@@ -28,7 +30,7 @@ pub enum Subcommand {
     #[command(subcommand, about = "Text sign/verify")]
     Text(TextSubCommand),
     #[command(subcommand, about = "Http Serve")]
-    Http(HttpSubCommand)
+    Http(HttpSubCommand),
 }
 
 pub fn verify_input_file(filename: &str) -> Result<String, &'static str> {
@@ -36,5 +38,17 @@ pub fn verify_input_file(filename: &str) -> Result<String, &'static str> {
         Ok(filename.into())
     } else {
         Err("File not exist!")
+    }
+}
+
+impl CmdExcutor for Subcommand {
+    async fn execute(self) -> anyhow::Result<()> {
+        match self {
+            Subcommand::Csv(opts) => opts.execute().await,
+            Subcommand::GenPass(opts) => opts.execute().await,
+            Subcommand::Base64(opts) => opts.execute().await,
+            Subcommand::Text(opts) => opts.execute().await,
+            Subcommand::Http(opts) => opts.execute().await,
+        }
     }
 }

@@ -1,9 +1,11 @@
 use clap::Parser;
 use std::{
-    fmt,
+    fmt, fs,
     path::{Path, PathBuf},
     str::FromStr,
 };
+
+use crate::{process_key_generate, process_sign, process_verify, CmdExcutor};
 
 use super::verify_input_file;
 
@@ -90,5 +92,45 @@ impl From<TextSignFormat> for &'static str {
 impl fmt::Display for TextSignFormat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", Into::<&str>::into(*self))
+    }
+}
+
+impl CmdExcutor for TextSignOpts {
+    async fn execute(self) -> anyhow::Result<()> {
+        let sign = process_sign(&self.input, &self.key, self.format)?;
+        println!("{}", sign);
+        Ok(())
+    }
+}
+
+impl CmdExcutor for TextVerifyOpts {
+    async fn execute(self) -> anyhow::Result<()> {
+        let is_verify = process_verify(&self.input, &self.key, self.format, &self.sig)?;
+        println!("{}", is_verify);
+        Ok(())
+    }
+}
+
+impl CmdExcutor for KeyGenerateOpts {
+    async fn execute(self) -> anyhow::Result<()> {
+        let key = process_key_generate(self.format)?;
+        match self.format {
+            TextSignFormat::Blake3 => fs::write(self.output_path.join("blake3.txt"), &key[0])?,
+            TextSignFormat::Ed25519 => {
+                fs::write(self.output_path.join("ed25519_public_key.txt"), &key[0])?;
+                fs::write(self.output_path.join("ed25519_secret_key.txt"), &key[1])?;
+            }
+        }
+        Ok(())
+    }
+}
+
+impl CmdExcutor for TextSubCommand {
+    async fn execute(self) -> anyhow::Result<()> {
+        match self {
+            TextSubCommand::Sign(opt) => opt.execute().await,
+            TextSubCommand::Verify(opt) => opt.execute().await,
+            TextSubCommand::Generate(opt) => opt.execute().await,
+        }
     }
 }

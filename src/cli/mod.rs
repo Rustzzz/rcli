@@ -3,7 +3,8 @@ mod csv;
 mod genpass;
 mod http;
 mod text;
-use self::{csv::CsvOpt, genpass::GenPassOpts};
+mod jwt;
+use self::{csv::CsvOpt, genpass::GenPassOpts, jwt::JwtSubCommand};
 use crate::CmdExcutor;
 pub use base64::{Base64Format, Base64SubCommand};
 use clap::Parser;
@@ -31,6 +32,8 @@ pub enum Subcommand {
     Text(TextSubCommand),
     #[command(subcommand, about = "Http Serve")]
     Http(HttpSubCommand),
+    #[command(subcommand, about = "Jwt sign/verify")]
+    Jwt(JwtSubCommand),
 }
 
 pub fn verify_input_file(filename: &str) -> Result<String, &'static str> {
@@ -49,6 +52,7 @@ impl CmdExcutor for Subcommand {
             Subcommand::Base64(opts) => opts.execute().await,
             Subcommand::Text(opts) => opts.execute().await,
             Subcommand::Http(opts) => opts.execute().await,
+            Subcommand::Jwt(opts) => opts.execute().await,
         }
     }
 }

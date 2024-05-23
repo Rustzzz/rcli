@@ -8,6 +8,7 @@ pub use process::process_verify;
 pub use process::process_key_generate;
 pub use process::{process_decode,process_encode};
 pub use process::process_http_serve;
+pub use process::{process_jwt_sign,process_jwt_verify};
 pub use cli::OutputFormat;
 pub use cli::Opts;
 pub use cli::Subcommand;

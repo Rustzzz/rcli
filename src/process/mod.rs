@@ -9,4 +9,6 @@ pub use gen_pass::process_genpass;
 pub use text::process_sign;
 pub use text::process_verify;
 pub use text::process_key_generate;
+pub use text::process_encrypt;
+pub use text::process_decrypt;
 pub use http_serve::process_http_serve;

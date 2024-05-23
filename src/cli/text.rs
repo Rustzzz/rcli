@@ -4,8 +4,10 @@ use std::{
     path::{Path, PathBuf},
     str::FromStr,
 };
-
-use crate::{process_key_generate, process_sign, process_verify, CmdExcutor};
+use crate::{
+    process::{process_decrypt, process_encrypt},
+    process_key_generate, process_sign, process_verify, CmdExcutor,
+};
 
 use super::verify_input_file;
 
@@ -15,8 +17,27 @@ pub enum TextSubCommand {
     Sign(TextSignOpts),
     #[command(about = "Verify a signature with a public/session key")]
     Verify(TextVerifyOpts),
+    #[command(about = "Encrypt messaga with chacha20poly1305")]
+    Encrypt(Chacha20EncryptOpts),
+    #[command(about = "Decrypt messaga with chacha20poly1305")]
+    Decrypt(Chacha20DecryptOpts),
     #[command(about = "Generate a random blake3 key or ed25519 key pair")]
     Generate(KeyGenerateOpts),
+}
+#[derive(Debug, Parser)]
+pub struct Chacha20EncryptOpts {
+    #[arg(short, long, value_parser = verify_input_file, default_value = "-")]
+    pub input: String,
+    #[arg(short, long, value_parser = verify_input_file)]
+    pub key: String,
+}
+
+#[derive(Debug, Parser)]
+pub struct Chacha20DecryptOpts {
+    #[arg(short, long)]
+    pub sig: String,
+    #[arg(short, long, value_parser = verify_input_file)]
+    pub key: String,
 }
 
 #[derive(Debug, Parser)]
@@ -53,6 +74,7 @@ pub struct KeyGenerateOpts {
 pub enum TextSignFormat {
     Blake3,
     Ed25519,
+    Chacha20poly1305,
 }
 
 fn parse_text_sign_format(format: &str) -> Result<TextSignFormat, anyhow::Error> {
@@ -75,6 +97,7 @@ impl FromStr for TextSignFormat {
         match s {
             "blake3" => Ok(TextSignFormat::Blake3),
             "ed25519" => Ok(TextSignFormat::Ed25519),
+            "chacha20poly1305" => Ok(TextSignFormat::Chacha20poly1305),
             _ => Err(anyhow::anyhow!("Invalid format")),
         }
     }
@@ -85,6 +108,7 @@ impl From<TextSignFormat> for &'static str {
         match format {
             TextSignFormat::Blake3 => "blake3",
             TextSignFormat::Ed25519 => "ed25519",
+            TextSignFormat::Chacha20poly1305 => "chacha20poly1305",
         }
     }
 }
@@ -120,7 +144,26 @@ impl CmdExcutor for KeyGenerateOpts {
                 fs::write(self.output_path.join("ed25519_public_key.txt"), &key[0])?;
                 fs::write(self.output_path.join("ed25519_secret_key.txt"), &key[1])?;
             }
+            TextSignFormat::Chacha20poly1305 => {
+                fs::write(self.output_path.join("chacha20.key"), &key[0])?;
+            }
         }
+        Ok(())
+    }
+}
+
+impl CmdExcutor for Chacha20EncryptOpts {
+    async fn execute(self) -> anyhow::Result<()> {
+        let process_encrypt = process_encrypt(&self.input, &self.key)?;
+        println!("{}", process_encrypt);
+        Ok(())
+    }
+}
+
+impl CmdExcutor for Chacha20DecryptOpts {
+    async fn execute(self) -> anyhow::Result<()> {
+        let decrypt = process_decrypt(&self.sig, &self.key)?;
+        println!("{}", decrypt);
         Ok(())
     }
 }
@@ -131,6 +174,8 @@ impl CmdExcutor for TextSubCommand {
             TextSubCommand::Sign(opt) => opt.execute().await,
             TextSubCommand::Verify(opt) => opt.execute().await,
             TextSubCommand::Generate(opt) => opt.execute().await,
+            TextSubCommand::Encrypt(opt) => opt.execute().await,
+            TextSubCommand::Decrypt(opt) => opt.execute().await,
         }
     }
 }
